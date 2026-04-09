@@ -89,7 +89,7 @@ if __name__ == '__main__':
     with open(JSON_PATH, "r", encoding="utf-8") as f:
         test_vectors = json.load(f)
 
-    print("\n=== Task 1: Trivium ===")
+    print("\nTask 1: Trivium")
 
     # Run tests over all vectors
     for tv in test_vectors:

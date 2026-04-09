@@ -35,7 +35,7 @@ if __name__ == '__main__':
     with open(JSON_PATH, "r", encoding="utf-8") as f:
         test_vectors = json.load(f)
 
-    print("\n=== Task 2: GGM PRF ===")
+    print("\nTask 2: GGM PRF")
 
     # Run tests over all vectors
     for tv in test_vectors:
@@ -52,6 +52,3 @@ if __name__ == '__main__':
         # Provide debug info only if test fails
         if not passed:
             print(f"  Got CT: {result.hex()} (Expected: {expected.hex()})")
-
-
-# TO BE REVIEWD

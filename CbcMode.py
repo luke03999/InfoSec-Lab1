@@ -102,7 +102,7 @@ if __name__ == '__main__':
     with open(JSON_PATH, "r", encoding="utf-8") as f:
         vectors = json.load(f)
 
-    print("\n=== Task 5: CBC Mode ===")
+    print("\nTask 5: CBC Mode")
 
     # Run tests over all vectors
     for tv in vectors:

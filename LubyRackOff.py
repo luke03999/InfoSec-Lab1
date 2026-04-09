@@ -81,7 +81,7 @@ if __name__ == '__main__':
     with open(JSON_PATH, "r") as f:
         vectors = json.load(f)
 
-    print("\n=== Task 3: Luby-Rackoff ===")
+    print("\nTask 3: Luby-Rackoff")
 
     # Run tests over all vectors
     for tv in vectors:
