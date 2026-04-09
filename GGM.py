@@ -31,11 +31,11 @@ def ggm_prf(key: bytes, input_data: bytes) -> bytes:
 
 
 if __name__ == '__main__':
-    # Load test vectors
+    # Load test vectors "lab1task2.json"
     with open(JSON_PATH, "r", encoding="utf-8") as f:
         test_vectors = json.load(f)
 
-    print("\n=== Task 2: GGM PRF ===")
+    print("--- Star Task 2: GGM PRF ---")
 
     # Run tests over all vectors
     for tv in test_vectors:
@@ -47,11 +47,10 @@ if __name__ == '__main__':
         result = ggm_prf(key, input_data)
         passed = (result == expected)
 
-        print(f"Test #{tv['number']}: {'PASS' if passed else 'FAIL'}")
+        print(f"        Test {tv['number']}: {'PASS' if passed else 'FAIL'}")
 
         # Provide debug info only if test fails
         if not passed:
             print(f"  Got CT: {result.hex()} (Expected: {expected.hex()})")
 
-
-# TO BE REVIEWD
+    print("--- End Task 2: GGM PRF ---")

@@ -34,6 +34,7 @@ A random permutation satisfies this with probability ~1/2^80 → negligible.
 import secrets
 from LubyRackOff import LubyRackoffCipher, xor_bytes
 
+# Global variable
 HALF = 10
 BLOCK = 20
 
@@ -56,6 +57,8 @@ def two_round_distinguisher(enc) -> bool:
     For F(2): left(C0) XOR left(C1) == L0 XOR L1  (always)
     For random permutation: holds with prob ~1/2^80
     """
+
+
     R  = rand_half()
     L0 = rand_half()
     L1 = rand_half()
@@ -115,7 +118,9 @@ if __name__ == "__main__":
     # Sanity check: should fail on a 4-round cipher (behaves like random permutation)
     key4 = secrets.token_bytes(HALF * 4)
     cipher4 = LubyRackoffCipher(key4, rounds=4)
-    hits = sum(two_round_distinguisher(cipher4.encrypt) for _ in range(100))
+    hits = sum(two_round_distinguisher(cipher4.encrypt) for _ in range(100)
+
+)
     print(f"2-round distinguisher on F(4): {hits}/100 matches (expected ~50 by chance)")
 
     print()

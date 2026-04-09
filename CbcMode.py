@@ -29,7 +29,7 @@ def iso_7816_4_unpad(data: bytes, block_size: int) -> bytes:
     if not data or len(data) % block_size != 0:
         raise ValueError("Invalid padded data length")
 
-    # Start from the end and remove zeros
+    # Start from the end and remove all zeros
     i = len(data) - 1
     while i >= 0 and data[i] == 0x00:
         i -= 1
@@ -48,7 +48,7 @@ class CBCCipher:
     def __init__(self, key: bytes):
         self.block_cipher = LubyRackoffCipher(key, rounds=4)
 
-    # Encrypts the plaintext using CBC mode and returns IV + ciphertext.
+    # Encrypts the plaintext using CBC mode and returns IV (init vector) + ciphertext.
     def encrypt(self, plaintext: bytes, iv: bytes) -> bytes:
         if len(iv) != self.BLOCK_SIZE:
             raise ValueError(f"IV must be {self.BLOCK_SIZE} bytes")
@@ -60,7 +60,7 @@ class CBCCipher:
         previous = iv
         ciphertext_blocks = [iv]
 
-        # CBC Encryption: XOR plaintext with previous ciphertext (or IV), then encrypt
+        # CBC Encryption: XOR plaintext with previous ciphertext (or init vector), then encrypt
         for block in blocks:
             xored = xor_bytes(block, previous)
             encrypted = self.block_cipher.encrypt(xored)
@@ -98,11 +98,11 @@ class CBCCipher:
 
 
 if __name__ == '__main__':
-    # Load test vectors
+    # Load test vectors "lab1task5.json"
     with open(JSON_PATH, "r", encoding="utf-8") as f:
         vectors = json.load(f)
 
-    print("\n=== Task 5: CBC Mode ===")
+    print("------------ Start Task 5: CBC Mode ------------")
 
     # Run tests over all vectors
     for tv in vectors:
@@ -122,10 +122,12 @@ if __name__ == '__main__':
         except Exception as e:
             dec_ok = False
 
-        print(f"Test #{tv['number']}: ENC {'PASS' if enc_ok else 'FAIL'} | DEC {'PASS' if dec_ok else 'FAIL'}")
+        print(f"    Test {tv['number']}: Encryption {'PASS' if enc_ok else 'FAIL'} | Decryption {'PASS' if dec_ok else 'FAIL'}")
 
         # Display debug info on failure
         if not enc_ok:
-            print(f"  ENC FAIL -> Got CT: {result_ct.hex()} (Expected: {expected_ct.hex()})")
+            print(f"  Encryption FAIL --> Got CipherText: {result_ct.hex()} (Expected: {expected_ct.hex()})")
         if not dec_ok:
-            print("  DEC FAIL -> Decryption resulted in an error or mismatched message")
+            print("  Decryption FAIL --> Decryption resulted in an error or mismatched message")
+
+    print("------------ End Task 5: CBC Mode --------------")
