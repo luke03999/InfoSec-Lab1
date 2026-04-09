@@ -17,7 +17,7 @@ class LubyRackoffCipher:
     HALF_BLOCK_SIZE = 10
     BLOCK_SIZE = 20
 
-    # Initializes the cipher with the provided key and number of rounds.
+    # Initializes the cipher with the provided key and number of rounds (in our case 4 rounds specified in the task 3).
     def __init__(self, key: bytes, rounds: int = 4):
         if rounds < 1:
             raise ValueError("Rounds must be at least 1")
@@ -39,6 +39,7 @@ class LubyRackoffCipher:
     # Ensures that the input block matches the expected block size.
     def _validate_block(self, block: bytes, name: str) -> None:
         if len(block) != self.BLOCK_SIZE:
+            # Raise an error if the blocks have different size
             raise ValueError(f"{name} must be {self.BLOCK_SIZE} bytes")
 
     # Splits a full block into two equal halves (left and right).
@@ -60,6 +61,7 @@ class LubyRackoffCipher:
 
         return left + right
 
+
     # Decrypts a single ciphertext block using the reversed Feistel network.
     def decrypt(self, ciphertext: bytes) -> bytes:
         self._validate_block(ciphertext, "Ciphertext")
@@ -77,11 +79,11 @@ class LubyRackoffCipher:
 
 
 if __name__ == '__main__':
-    # Load test vectors
+    # Load test vectors "lab1task3.json"
     with open(JSON_PATH, "r") as f:
         vectors = json.load(f)
 
-    print("\nTask 3: Luby-Rackoff")
+    print("----------- Start Task 3: Luby-Rackoff -----------")
 
     # Run tests over all vectors
     for tv in vectors:
@@ -94,9 +96,11 @@ if __name__ == '__main__':
         dec = cipher.decrypt(ct)
 
         enc_ok, dec_ok = (ct == expected_ct), (dec == msg)
-        print(f"Test #{tv['number']}: ENC {'PASS' if enc_ok else 'FAIL'} | DEC {'PASS' if dec_ok else 'FAIL'}")
+        print(f"    Test {tv['number']}: Encryption {'PASS' if enc_ok else 'FAIL'} | Decryption {'PASS' if dec_ok else 'FAIL'}")
 
         # Provide debug info only if tests fail
         if not enc_ok or not dec_ok:
-            print(f"  Got CT: {ct.hex()} (Expected: {expected_ct.hex()})") if not enc_ok else None
+            print(f"  Got CipherText: {ct.hex()} (Expected: {expected_ct.hex()})") if not enc_ok else None
             print(f"  Decrypt failed: {dec.hex()}") if not dec_ok else None
+
+    print("----------- End Task 3: Luby-Rackoff -----------")

@@ -7,30 +7,30 @@ JSON_PATH = "vectors/lab1task1.json"
 # Implementation of the Trivium stream cipher.
 class Trivium:
 
-    # Initializes the 288-bit internal state using the key and IV.
+    # Initializes the 288-bit internal state using the Key and Initialization vector (iv).
     def __init__(self, key: bytes, iv: bytes):
         key_bits = bytes_to_bits(key)
         iv_bits = bytes_to_bits(iv)
 
-        # Reverse bits for Key and IV 
+        # Reverse bits for Key and Initialization vector (iv)
         self.key = key_bits[::-1]
         self.iv = iv_bits[::-1]
 
-        # Initialize 288-bit state array with zeros
+        # Initialize 288-bit state array with full zeroes
         self.state = [0] * 288
 
-        # Load Key into first register (s1..s80)
+        # Load Key into first register (s1,...,s80)
         for i in range(0, 80):
             self.state[i] = self.key[i]
 
-        # Load IV into second register (s94..s173)
+        # Load Initialization vector into second register (s94,...,s173)
         for i in range(93, 173):
             self.state[i] = self.iv[i - 93]
 
-        # Set specific bits for third register
+        # Set specific bits for the third register (last 3 bits are always equal to one)
         self.state[285] = self.state[286] = self.state[287] = 1
 
-        # Perform the 4 * 288 initialization cycles
+        # Perform the 4 * 288 initialization cycles so in total 1152
         for _ in range(4 * 288):
             self._gen_bit()
 
@@ -85,11 +85,11 @@ class Trivium:
 
 
 if __name__ == '__main__':
-    # Load test vectors
+    # Load test vectors "lab1task1.json"
     with open(JSON_PATH, "r", encoding="utf-8") as f:
         test_vectors = json.load(f)
 
-    print("\nTask 1: Trivium")
+    print("--- Start Task 1: Trivium ---")
 
     # Run tests over all vectors
     for tv in test_vectors:
@@ -100,8 +100,10 @@ if __name__ == '__main__':
         result = trivium.gen_bytes(32)
         passed = (result == expected)
 
-        print(f"Test #{tv['number']}: {'PASS' if passed else 'FAIL'}")
+        print(f"        Test {tv['number']}: {'PASS' if passed else 'FAIL'}")
 
         # Display debug info on failure
         if not passed:
             print(f"  Got CT: {result.hex()} (Expected: {expected.hex()})")
+
+    print("--- End Task 1: Trivium ---")

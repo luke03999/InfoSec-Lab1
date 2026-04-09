@@ -13,7 +13,7 @@ TARGET_PLAIN = b'{"group":"ChaCha","privileged":true,"token-id":"a8e144d231a0a23
 session = requests.Session()
 
 # Sends a modified ciphertext to the server and checks if the padding is valid.
-# Returns True if no padding error (status code 422) occurs.
+# This function returns True if there is no padding error (status code 422) occurs.
 def oracle(mask: bytes, target: bytes) -> bool:
     while True:
         r = session.get(f"{URL}?token={(mask + target).hex()}", timeout=10)

@@ -3,6 +3,7 @@
 import time
 import requests
 
+#Global variable
 BLOCK  = 20
 URL    = "https://interrato.dev/infosec/lab1"
 TOKEN  = "6ca1778f4e71cbf7bc3c1a9c8abff402e522f6d41b64fb7723a30de687da8ff20e0ba82920b6787e750b5a700b769be6701d7416d0d08439e596cc7c0af9ac76710b95c0423f4a993b709e0891e50e47f791db75da8ee648a0ab0a644317d979a76b27c0"
@@ -10,7 +11,7 @@ TOKEN  = "6ca1778f4e71cbf7bc3c1a9c8abff402e522f6d41b64fb7723a30de687da8ff20e0ba8
 session = requests.Session()
 
 # Sends a modified ciphertext to the server and checks if the padding is valid.
-# Returns True if no padding error (status code 422) occurs.
+# This function returns True if there is no padding error (status code 422) occurs.
 def oracle(mask: bytes, target: bytes) -> bool:
     while True:
         r = session.get(f"{URL}?token={(mask + target).hex()}", timeout=10)
