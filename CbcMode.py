@@ -102,7 +102,7 @@ if __name__ == '__main__':
     with open(JSON_PATH, "r", encoding="utf-8") as f:
         vectors = json.load(f)
 
-    print("------------ Start Task 5: CBC Mode ------------")
+    print("Start Task 5: CBC Mode")
 
     # Run tests over all vectors
     for tv in vectors:
@@ -126,8 +126,8 @@ if __name__ == '__main__':
 
         # Display debug info on failure
         if not enc_ok:
-            print(f"  Encryption FAIL --> Got CipherText: {result_ct.hex()} (Expected: {expected_ct.hex()})")
+            print(f"    Encryption FAIL --> Got CipherText: {result_ct.hex()} (Expected: {expected_ct.hex()})")
         if not dec_ok:
-            print("  Decryption FAIL --> Decryption resulted in an error or mismatched message")
+            print("     Decryption FAIL --> Decryption resulted in an error or mismatched message")
 
-    print("------------ End Task 5: CBC Mode --------------")
+    print("End Task 5: CBC Mode")

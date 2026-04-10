@@ -83,7 +83,7 @@ if __name__ == '__main__':
     with open(JSON_PATH, "r") as f:
         vectors = json.load(f)
 
-    print("----------- Start Task 3: Luby-Rackoff -----------")
+    print("Start Task 3: Luby-Rackoff")
 
     # Run tests over all vectors
     for tv in vectors:
@@ -103,4 +103,4 @@ if __name__ == '__main__':
             print(f"  Got CipherText: {ct.hex()} (Expected: {expected_ct.hex()})") if not enc_ok else None
             print(f"  Decrypt failed: {dec.hex()}") if not dec_ok else None
 
-    print("----------- End Task 3: Luby-Rackoff -----------")
+    print("End Task 3: Luby-Rackoff")

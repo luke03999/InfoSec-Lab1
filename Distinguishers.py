@@ -47,7 +47,7 @@ if __name__ == "__main__":
 
     print("2-round distinguisher")
     print(f"  F(2): {[two_round_distinguisher(k2.encrypt) for _ in range(N)]}  (expect: feistel)")
-    print(f"  F(4): {[two_round_distinguisher(k4.encrypt) for _ in range(N)]}  (expect: random)")
+    print(f"  F(4): {[two_round_distinguisher(k4.encrypt) for _ in range(N)]}  (expect: random)\n")
 
     print("3-round distinguisher")
     print(f"  F(3): {[three_round_distinguisher(k3.encrypt, k3.decrypt) for _ in range(N)]}  (expect: feistel)")

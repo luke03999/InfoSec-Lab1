@@ -89,7 +89,7 @@ if __name__ == '__main__':
     with open(JSON_PATH, "r", encoding="utf-8") as f:
         test_vectors = json.load(f)
 
-    print("--- Start Task 1: Trivium ---")
+    print("Start Task 1: Trivium")
 
     # Run tests over all vectors
     for tv in test_vectors:
@@ -100,10 +100,10 @@ if __name__ == '__main__':
         result = trivium.gen_bytes(32)
         passed = (result == expected)
 
-        print(f"        Test {tv['number']}: {'PASS' if passed else 'FAIL'}")
+        print(f"    Test {tv['number']}: {'PASS' if passed else 'FAIL'}")
 
         # Display debug info on failure
         if not passed:
             print(f"  Got CT: {result.hex()} (Expected: {expected.hex()})")
 
-    print("--- End Task 1: Trivium ---")
+    print("End Task 1: Trivium")
